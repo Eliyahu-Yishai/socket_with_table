@@ -8,7 +8,8 @@ const socket = io('http://localhost:5000');
 function DataTable() {
   const [data, setData] = useState([{}]);
   const [indexesDataSelected, setIndexesDataSelected] = useState([]);
-
+  const numRowSize = 10
+  
   useEffect(() => {
     fetch("/api").then(
       response => response.json()
@@ -19,7 +20,7 @@ function DataTable() {
 
     socket.on("connect", () => {
       socket.on("newData", (newData) => {
-        
+
         setData((prevData) => {
           const newDataExists = prevData.some(item => item.phoneNumber === newData.phoneNumber);
           if (!newDataExists) {
@@ -38,6 +39,7 @@ function DataTable() {
   }, []);
 
   const options = {
+    rowsPerPageOptions:{numRowSize},
     filterType: 'checkbox',
     responsive: "standard",
 
@@ -48,15 +50,14 @@ function DataTable() {
         const updatedArray = indexesDataSelected.filter(ind => ind !== indexLine);
         setIndexesDataSelected(updatedArray);
       } else {
-        console.log("Date selected",  data[indexLine]);
+        console.log("Date selected", data[indexLine]);
         setIndexesDataSelected([...indexesDataSelected, indexLine]);
-      }       
+      }
     },
 
     onRowsDelete: (onRowsDelete) => {
       return false;
     },
-    customToolbarSelect: () => { }
 
   };
 
@@ -71,5 +72,9 @@ function DataTable() {
 }
 
 export default DataTable;
+
+
+
+
 
 
