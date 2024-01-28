@@ -53,16 +53,13 @@ app.post("/api", (req, res) => {
     }
   }
 
-  const data = readFile();
-
   // push to local data
-  leadsData.push(newData);
+  leadsData.splice(0, 0, newData);
 
   // push data to leads.json
-  data.push(newData);
-  writeFile(data);
+  writeFile(leadsData);
   io.emit("newData", newData);
-  res.status(201).json(data);
+  res.status(201).json(leadsData);
 });
 
 
