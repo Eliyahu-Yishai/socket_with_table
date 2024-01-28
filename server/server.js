@@ -34,6 +34,7 @@ app.get("/api", (req, res) => {
   res.json({
     data,
     totalPages: Math.ceil(leadsData.length / itemsPerPage),
+    totalRows: leadsData.length
   });
 });
 
