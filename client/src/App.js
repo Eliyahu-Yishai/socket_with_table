@@ -1,10 +1,14 @@
 import React from 'react'
 import TableData from './comp/DataTable'
+import { ProvideSocketIoClient } from "./socketHelper/use-socket-io"
 
 
 const App = () => {
   return (
-    <TableData/>
+    <ProvideSocketIoClient>
+      <TableData />
+    </ProvideSocketIoClient>
+
   )
 }
 
