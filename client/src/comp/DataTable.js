@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react"
 import MUIDataTable from "mui-datatables";
-import io from 'socket.io-client';
 import axios from 'axios';
-import { columns } from "../columns"
+import { columns } from "../tableHelper/columns"
+import { useSocketIoClient } from "../socketHook/use-socket-io";
 
-const socket = io('http://localhost:5000');
 
 function DataTable() {
   const [data, setData] = useState([]);
@@ -12,46 +11,49 @@ function DataTable() {
   const [totalRows, setTotalRows] = useState(0);
   const [indexesDataSelected, setIndexesDataSelected] = useState([]);
   const [pagesAlreadyLoading, setPagesAlreadyLoading] = useState([]);
+  const client = useSocketIoClient();
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!pageExistInData(currentPage, pagesAlreadyLoading)) {
-          const response = await axios.get(`/api?page=${currentPage + 1}`);
-          setData((prevData) => [...prevData, ...response.data.data]);
-          setTotalRows(response.data.totalRows);
-          setPagesAlreadyLoading((prevData) => [...prevData, currentPage]);
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      }
-    };
 
+  const handleIncomingNewData = (newData) => {
+    let newDataAdded = false;
+    setData((prevData) => {
+      const newDataExists = prevData.some(item => item.phoneNumber === newData.phoneNumber);
+      if (!newDataExists) {
+        newDataAdded = true;
+        return [newData, ...prevData];
+      } else {
+        return prevData;
+      }
+    });
+    if (newDataAdded) {
+      setTotalRows((totalRows + 1));
+    }
+    newDataAdded = false;
+  }
+
+
+  const fetchData = async () => {
+    try {
+      if (!pageExistInData(currentPage, pagesAlreadyLoading)) {
+        const response = await axios.get(`/api?page=${currentPage + 1}`);
+        console.log("response: ", response)
+        setData((prevData) => [...prevData, ...response.data.data]);
+        setTotalRows(response.data.totalRows);
+        setPagesAlreadyLoading((prevData) => [...prevData, currentPage]);
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    }
+  };
+
+
+  useEffect(() => {
     fetchData();
 
-    socket.on("connect", () => {
-      socket.on("newData", (newData) => {
-        let newDataAdded = false;
-        setData((prevData) => {
-          const newDataExists = prevData.some(item => item.phoneNumber === newData.phoneNumber);
-          if (!newDataExists) {
-            newDataAdded = true;
-            return [newData,...prevData];
-          } else {
-            return prevData;
-          }
-        });
-        if (newDataAdded){
-          setTotalRows(data.length);
-        }
-        newDataAdded = false;
-      })
-    });
+    client.subscribe("newData", handleIncomingNewData);
 
-    return () => {
-      socket.off('connect');
-    };
+    return () => client.unsubscribe("newData", handleIncomingNewData)
   }, [currentPage]);
 
 
@@ -85,12 +87,12 @@ function DataTable() {
 
   return (
     <div>
-        <MUIDataTable
-          title={"Leads List"}
-          data={data}
-          columns={columns}
-          options={options}
-        />
+      <MUIDataTable
+        title={"Leads List"}
+        data={data}
+        columns={columns}
+        options={options}
+      />
     </div>
   );
 }
