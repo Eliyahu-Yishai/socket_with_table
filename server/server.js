@@ -2,7 +2,6 @@ import { Server } from "socket.io";
 import { createServer } from "http";
 import express from "express";
 import fs from 'fs';
-import path from "path";
 
 const app = express();
 const httpServer = createServer(app);
@@ -17,10 +16,10 @@ const leadsData = readFile()
 
 app.use(express.json());
 
-
 httpServer.listen(5000, () => {
   console.log("listening on port 5000");
 });
+
 
 // API routes
 app.get("/api", (req, res) => {
@@ -33,10 +32,10 @@ app.get("/api", (req, res) => {
 
   res.json({
     data,
-    totalPages: Math.ceil(leadsData.length / itemsPerPage),
     totalRows: leadsData.length
   });
 });
+
 
 app.post("/api", (req, res) => {
   const newData = req.body;
